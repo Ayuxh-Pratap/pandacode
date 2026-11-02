@@ -5,10 +5,18 @@
 //! process applies `sanitize`, which drops those entries and is a no-op outside an AppImage.
 
 use std::ffi::{OsStr, OsString};
-use std::path::Path;
+use std::path::{Component, Path};
 
 /// Variables the AppImage runtime sets to describe itself.
 const APPIMAGE_MARKERS: [&str; 4] = ["APPDIR", "APPIMAGE", "ARGV0", "OWD"];
+
+/// Whether a path lies in an AppImage's extract-and-run copy (`appimage_extracted_<hash>`).
+/// A copy restarted by itself (after an update, say) inherits the previous copy's paths
+/// beside its own APPDIR, and that older extraction can still be on disk; its libraries
+/// break system tools just the same, for example `git` over HTTPS.
+fn in_extraction(entry: &OsStr) -> bool {
+    Path::new(entry).components().any(|part| matches!(part, Component::Normal(name) if name.to_str().is_some_and(|name| name.starts_with("appimage_extracted_"))))
+}
 
 /// Changes that undo the AppImage environment: `(name, Some(value))` sets, `(name, None)`
 /// removes. Empty unless both `APPIMAGE` and an absolute `APPDIR` are present.
@@ -21,7 +29,7 @@ fn appimage_overrides(vars: &[(OsString, OsString)]) -> Vec<(OsString, Option<Os
     if !appdir.is_absolute() || appdir.parent().is_none() {
         return Vec::new();
     }
-    let inside = |entry: &OsStr| Path::new(entry).starts_with(appdir);
+    let inside = |entry: &OsStr| Path::new(entry).starts_with(appdir) || in_extraction(entry);
     vars.iter()
         .filter_map(|(key, value)| {
             if APPIMAGE_MARKERS.iter().any(|marker| key == marker) {
@@ -134,6 +142,27 @@ mod tests {
                 ("PYTHONHOME".into(), None),
                 ("GDK_PIXBUF_MODULE_FILE".into(), None),
                 ("XDG_DATA_DIRS".into(), Some("/usr/local/share:/usr/share".into())),
+            ]
+        );
+    }
+
+    #[test]
+    fn an_earlier_extraction_inherited_by_a_restart_is_removed_too() {
+        let current = "/tmp/appimage_extracted_8fbe56b022643af849a024db80d273d9";
+        let found = overrides(&[
+            ("APPIMAGE", "/home/me/Applications/PandaCode-Linux-x86_64.AppImage"),
+            ("APPDIR", current),
+            ("LD_LIBRARY_PATH", "/tmp/appimage_extracted_8fbe56b022643af849a024db80d273d9/usr/lib/:/tmp/appimage_extracted_994eac3088c340640db3d83f6d65fdbc/usr/lib/:/opt/mine/lib"),
+            ("PATH", "/tmp/appimage_extracted_994eac3088c340640db3d83f6d65fdbc/usr/bin:/usr/bin"),
+            ("HOME", "/home/me"),
+        ]);
+        assert_eq!(
+            found,
+            [
+                ("APPIMAGE".into(), None),
+                ("APPDIR".into(), None),
+                ("LD_LIBRARY_PATH".into(), Some("/opt/mine/lib".into())),
+                ("PATH".into(), Some("/usr/bin".into())),
             ]
         );
     }

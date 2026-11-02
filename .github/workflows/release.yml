@@ -3,9 +3,9 @@ name: Release
 # installers and publishes them on a GitHub Release whose notes come from
 # releases/X.Y.Z.md. A manual run builds the installers as workflow artifacts
 # and publishes only when `publish` is checked. See docs/releasing.md.
+# This fork builds its own apps locally: a tag push starts nothing, and the publish and npm
+# jobs run only when the repository variable ALLOW_PUBLISH is 'true'.
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       publish:
@@ -154,7 +154,7 @@ jobs:
 
   publish:
     needs: [prepare, build, sbom]
-    if: github.ref_type == 'tag' || inputs.publish
+    if: vars.ALLOW_PUBLISH == 'true' && (github.ref_type == 'tag' || inputs.publish)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -203,7 +203,7 @@ jobs:
 
   npm:
     needs: [prepare, publish]
-    if: github.ref_type == 'tag'
+    if: vars.ALLOW_PUBLISH == 'true' && github.ref_type == 'tag'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

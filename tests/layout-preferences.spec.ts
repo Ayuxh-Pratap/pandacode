@@ -43,7 +43,7 @@ for (const [platform, modifier, key] of [['MacIntel', '⌘', 'Meta'], ['Win32', 
     await expect(settings).toBeVisible();
     await expect(page.locator('.text-size-setting')).toContainText(`${modifier} + / −`);
     await settings.getByRole('tab', {name:'About & updates', exact:true}).click();
-    await expect(page.locator('.settings-about')).toContainText('Releases');
+    await expect(page.locator('.settings-about')).toContainText('Local build');
   });
 }
 

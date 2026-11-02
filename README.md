@@ -154,7 +154,6 @@ information:
 | Latest versions of installed coding CLIs | `formulae.brew.sh`, `downloads.claude.ai`, `api.github.com`, `cdn.kimi.com`, `registry.npmjs.org` (Cline) | About every 6 hours |
 | Plan usage checks for your signed-in agents | That agent's provider | When you open the menu bar item or the Usage dialog |
 | Public model price list (for cost estimates) | `raw.githubusercontent.com` | Daily |
-| PandaCode's own updates (`latest.json` on this repository's latest release) | `github.com` | At launch and about every 6 hours unless Settings → About → Updates is Off |
 | Jev decision model list (optional) | `openrouter.ai` | Only when you choose OpenRouter for Jev decisions and open the model menu or press Refresh; no key is sent |
 | Jev decisions on OpenRouter (optional) | `openrouter.ai` | Only when you choose OpenRouter in Settings → Agents → Jev and run a decision check; sends the selected evidence with your key |
 | Cloud agents (optional): the task's checkout, prompt and harness login go to the machine you chose; PandaCode checks on its active runs | The cloud provider you connected | Only for tasks you start on a cloud provider; while a run is active and at launch to re-attach |
@@ -199,13 +198,9 @@ Release builds are not code-signed, so your OS will warn the first time:
   stays blank there, try GTK's native Wayland backend with
   `GDK_BACKEND=wayland ./PandaCode-Linux-x86_64.AppImage`.
 
-Each file has a `.sha256` checksum beside it. Once installed, PandaCode updates
-itself: it checks the latest release, downloads a newer version in the background,
-verifies its signature, and restarts to install it when no agent is working and
-you've stepped away (or when you click **Restart to update**). In Settings → About,
-**Notify me** checks but asks first (**Install and restart** / **Later**), and **Off**
-stops checking. On Linux only the AppImage updates itself; an unpacked AppImage or a
-package just reports new versions. See [platform support](docs/platform-support.md) for details.
+Each file has a `.sha256` checksum beside it. This fork's builds have no updater:
+PandaCode never checks for, downloads or installs a new version on its own. To update,
+rebuild from source and install the result. See [platform support](docs/platform-support.md) for details.
 
 Then install Git and at least one coding CLI and sign in with its normal login.
 PandaCode does not include provider plans or usage.

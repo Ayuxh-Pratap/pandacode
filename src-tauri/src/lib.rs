@@ -3762,8 +3762,6 @@ pub fn run() {
             tray::show(app)
         }))
         .plugin(tauri_plugin_dialog::init())
-        // Updates come only from GitHub Releases, verified against the public key in tauri.conf.json.
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             // Covers DMG installs and earlier failures; only ad hoc bundles change, on disk only.
